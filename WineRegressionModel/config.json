@@ -1,0 +1,4 @@
+{
+  "sqlConnectionString": "<SQL Connection String>",
+  "blobConnectionString": "<Blob Connection String>"
+}
