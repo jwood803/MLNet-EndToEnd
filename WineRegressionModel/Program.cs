@@ -8,12 +8,14 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using WineCommon;
 
 namespace WineRegressionModel
 {
     class Program
     {
         private static string _sqlConnectionString;
+        private static readonly string fileName = "wine.zip";
 
         static async Task Main(string[] args)
         {
@@ -47,17 +49,14 @@ namespace WineRegressionModel
 
             var model = pipeline.Fit(trainData);
 
-            var storageAccount = CloudStorageAccount.Parse(configuration["blobConnectionString"]);
-            var client = storageAccount.CreateCloudBlobClient();
-            var container = client.GetContainerReference("models");
-            var blob = container.GetBlockBlobReference("wine.zip");
+            var blob = BlobConnection.GetBlobReference(configuration["blobConnectionString"], "models", fileName);
 
-            using (var stream = File.Create("wine.zip"))
+            using (var stream = File.Create(fileName))
             {
                 context.Model.Save(model, stream);
             }
 
-            await blob.UploadFromFileAsync("wine.zip");
+            await blob.UploadFromFileAsync(fileName);
         }
 
         private static IEnumerable<WineData> ReadFromDatabase()
@@ -173,7 +172,7 @@ namespace WineRegressionModel
 
         private static float Parse(string value)
         {
-            return float.TryParse(value, out float prasedValue) ? prasedValue : default(float);
+            return float.TryParse(value, out float prasedValue) ? prasedValue : default;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace WineRegressionModel
+﻿namespace WineCommon
 {
     public class WineData
     {
