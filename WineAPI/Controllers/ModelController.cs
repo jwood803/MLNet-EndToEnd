@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.ML;
-using Microsoft.ML.Core.Data;
 using WineCommon;
 
 namespace WineAPI.Controllers
@@ -11,39 +10,46 @@ namespace WineAPI.Controllers
     [Route("api/[controller]")]
     [Produces("application/json")]
     [ApiController]
-    public class PredictController : ControllerBase
+    public class ModelController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        ITransformer _model;
+        MLContext _context;
 
-        public PredictController(IConfiguration configuration)
+        public ModelController(IConfiguration configuration)
         {
             _configuration = configuration;
-        }
 
-        [HttpPost]
-        public async Task<float> Post([FromBody] WineData wineData)
-        {
-            var context = new MLContext();
-            ITransformer model;
-            var modelPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "wine.zip");
+            _context = new MLContext();
+            var modelPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "wine.zip");
 
             if (!System.IO.File.Exists(modelPath))
             {
                 var blob = BlobConnection.GetBlobReference(_configuration["blobConnectionString"], "models", "wine.zip");
 
-                await blob.DownloadToFileAsync(modelPath, System.IO.FileMode.CreateNew);
+                blob.DownloadToFileAsync(modelPath, System.IO.FileMode.CreateNew).RunSynchronously();
             }
 
             using (var stream = System.IO.File.OpenRead(modelPath))
             {
-                model = context.Model.Load(stream);
+                _model = _context.Model.Load(stream);
             }
+        }
 
-            var predictionEngine = model.CreatePredictionEngine<WineData, WinePrediction>(context);
+        [HttpPost]
+        public float Post([FromBody] WineData wineData)
+        {
+            var predictionEngine = _model.CreatePredictionEngine<WineData, WinePrediction>(_context);
 
             var prediction = predictionEngine.Predict(wineData);
 
             return prediction.PredictedQuality;
+        }
+
+        [HttpGet]
+        public void Get()
+        {
+            //_model.
         }
     }
 }

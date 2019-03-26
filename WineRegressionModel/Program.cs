@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.ML;
-using Microsoft.ML.Data;
-using Microsoft.WindowsAzure.Storage;
-using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
@@ -34,20 +31,20 @@ namespace WineRegressionModel
 
             var context = new MLContext();
 
-            var mlData = context.Data.ReadFromEnumerable(dbData);
+            var mlData = context.Data.LoadFromEnumerable(dbData);
 
-            var (trainData, testData) = context.Regression.TrainTestSplit(mlData, testFraction: 0.2);
+            var trainTestData = context.Regression.TrainTestSplit(mlData, testFraction: 0.2);
 
-            var dataPreview = trainData.Preview();
+            var dataPreview = trainTestData.TrainSet.Preview();
             
             var pipeline = context.Transforms.Categorical.OneHotEncoding("TypeOneHot", "Type")
                 .Append(context.Transforms.Concatenate("Features", "FixedAcidity", "VolatileAcidity", "CitricAcid",
                     "ResidualSugar", "Chlorides", "FreeSulfurDioxide", "TotalSulfurDioxide", "Density", "Ph", "Sulphates",
                     "Alcohol"))
                 .Append(context.Transforms.CopyColumns(("Label", "Quality")))
-                .Append(context.Regression.Trainers.FastTree(labelColumn: "Label", featureColumn: "Features"));
+                .Append(context.Regression.Trainers.FastTree());
 
-            var model = pipeline.Fit(trainData);
+            var model = pipeline.Fit(trainTestData.TrainSet);
 
             var blob = BlobConnection.GetBlobReference(configuration["blobConnectionString"], "models", fileName);
 
@@ -103,7 +100,7 @@ namespace WineRegressionModel
             {
                 conn.Open();
 
-                var insertCommand = @"INSERT INTO mlnetExample.dbo.WineData VALUES 
+                var insertCommand = @"INSERT INTO winedata.dbo.WineData VALUES 
                     (@type, @fixedAcidity, @volatileAcidity, @citricAcid, @residualSugar, @chlorides,
                      @freeSulfureDioxide, @totalSulfurDioxide, @density, @ph, @sulphates, @alcohol, @quality);";
 
@@ -167,7 +164,7 @@ namespace WineRegressionModel
                     Quality = Parse(i[12])
                 });
 
-            return items.ToList();
+            return items;
         }
 
         private static float Parse(string value)
