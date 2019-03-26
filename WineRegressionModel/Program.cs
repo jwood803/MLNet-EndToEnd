@@ -1,19 +1,18 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.ML;
-using Microsoft.ML.Data;
-using Microsoft.WindowsAzure.Storage;
-using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using WineCommon;
 
 namespace WineRegressionModel
 {
     class Program
     {
         private static string _sqlConnectionString;
+        private static readonly string fileName = "wine.zip";
 
         static async Task Main(string[] args)
         {
@@ -32,32 +31,29 @@ namespace WineRegressionModel
 
             var context = new MLContext();
 
-            var mlData = context.Data.ReadFromEnumerable(dbData);
+            var mlData = context.Data.LoadFromEnumerable(dbData);
 
-            var (trainData, testData) = context.Regression.TrainTestSplit(mlData, testFraction: 0.2);
+            var trainTestData = context.Regression.TrainTestSplit(mlData, testFraction: 0.2);
 
-            var dataPreview = trainData.Preview();
+            var dataPreview = trainTestData.TrainSet.Preview();
             
             var pipeline = context.Transforms.Categorical.OneHotEncoding("TypeOneHot", "Type")
                 .Append(context.Transforms.Concatenate("Features", "FixedAcidity", "VolatileAcidity", "CitricAcid",
                     "ResidualSugar", "Chlorides", "FreeSulfurDioxide", "TotalSulfurDioxide", "Density", "Ph", "Sulphates",
                     "Alcohol"))
                 .Append(context.Transforms.CopyColumns(("Label", "Quality")))
-                .Append(context.Regression.Trainers.FastTree(labelColumn: "Label", featureColumn: "Features"));
+                .Append(context.Regression.Trainers.FastTree());
 
-            var model = pipeline.Fit(trainData);
+            var model = pipeline.Fit(trainTestData.TrainSet);
 
-            var storageAccount = CloudStorageAccount.Parse(configuration["blobConnectionString"]);
-            var client = storageAccount.CreateCloudBlobClient();
-            var container = client.GetContainerReference("models");
-            var blob = container.GetBlockBlobReference("wine.zip");
+            var blob = BlobConnection.GetBlobReference(configuration["blobConnectionString"], "models", fileName);
 
-            using (var stream = File.Create("wine.zip"))
+            using (var stream = File.Create(fileName))
             {
                 context.Model.Save(model, stream);
             }
 
-            await blob.UploadFromFileAsync("wine.zip");
+            await blob.UploadFromFileAsync(fileName);
         }
 
         private static IEnumerable<WineData> ReadFromDatabase()
@@ -104,7 +100,7 @@ namespace WineRegressionModel
             {
                 conn.Open();
 
-                var insertCommand = @"INSERT INTO mlnetExample.dbo.WineData VALUES 
+                var insertCommand = @"INSERT INTO winedata.dbo.WineData VALUES 
                     (@type, @fixedAcidity, @volatileAcidity, @citricAcid, @residualSugar, @chlorides,
                      @freeSulfureDioxide, @totalSulfurDioxide, @density, @ph, @sulphates, @alcohol, @quality);";
 
@@ -168,12 +164,12 @@ namespace WineRegressionModel
                     Quality = Parse(i[12])
                 });
 
-            return items.ToList();
+            return items;
         }
 
         private static float Parse(string value)
         {
-            return float.TryParse(value, out float prasedValue) ? prasedValue : default(float);
+            return float.TryParse(value, out float prasedValue) ? prasedValue : default;
         }
     }
 }

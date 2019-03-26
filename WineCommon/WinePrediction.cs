@@ -1,6 +1,6 @@
 ﻿using Microsoft.ML.Data;
 
-namespace WineRegressionModel
+namespace WineCommon
 {
     public class WinePrediction
     {
