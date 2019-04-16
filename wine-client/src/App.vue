@@ -3,7 +3,7 @@
     <v-app dark>
       <Toolbar></Toolbar>
       <v-content>
-        <router-link></router-link>
+        <router-view></router-view>
       </v-content>
     </v-app>
   </div>
