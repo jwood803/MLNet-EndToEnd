@@ -45,11 +45,5 @@ namespace WineAPI.Controllers
 
             return prediction.PredictedQuality;
         }
-
-        [HttpGet]
-        public void Get()
-        {
-            //_model.
-        }
     }
 }
