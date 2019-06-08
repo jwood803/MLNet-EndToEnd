@@ -99,7 +99,7 @@
           </v-text-field>
         </v-flex>
       </v-form>
-      <v-btn dark class="primary darken-2">
+      <v-btn @click="predict" dark class="primary darken-2">
         Predict
       </v-btn>
     </v-layout>
@@ -107,6 +107,8 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   name: "Predict",
   data: () => ({
@@ -123,21 +125,29 @@ export default {
     density: 0,
     ph: 0,
     sulphates: 0,
-    alcohol: 0
+    alcohol: 0,
+    prediction: null
+  }),
+  methods: () => ({
+    predict: () => {
+      const prediction = {
+        wineType: this.wineType,
+        fixedAcidity: this.fixedAcidity,
+        volatileAcidity: this.volatileAcidity,
+        citricAcid: this.citricAcid,
+        residualSugar: this.residualSugar,
+        chlorides: this.chlorides,
+        freeSulfurDioxide: this.freeSulfurDioxide,
+        totalSulfurDioxide: this.totalSulfurDioxide,
+        density: this.density,
+        ph: this.ph,
+        sulphates: this.sulphates,
+        alcohol: this.alcohol
+      };
+
+      axios.post("", prediction).then(resp => console.log(resp.data));
+    }
   })
-  // methods: () => ({
-  //   predict: () => {
-  //     let prediction = {
-  //       wineType: this.wineType,
-  //       fixedAcidity: this.fixedAcidity,
-  //       volatileAcidity: this.volatileAcidity,
-  //       citricAcid: this.citricAcid,
-  //       residualSugar: this.residualSugar,
-  //       chlorides: this.chlorides,
-  //
-  //     }
-  //   }
-  // })
 };
 </script>
 
