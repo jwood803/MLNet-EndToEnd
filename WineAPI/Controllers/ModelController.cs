@@ -13,6 +13,7 @@ namespace WineAPI.Controllers
     public class ModelController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        private readonly string _modelPath;
         ITransformer _model;
         MLContext _context;
 
@@ -21,35 +22,29 @@ namespace WineAPI.Controllers
             _configuration = configuration;
 
             _context = new MLContext();
-            var modelPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "wine.zip");
-
-            if (!System.IO.File.Exists(modelPath))
-            {
-                var blob = BlobConnection.GetBlobReference(_configuration["blobConnectionString"], "models", "wine.zip");
-
-                blob.DownloadToFileAsync(modelPath, System.IO.FileMode.CreateNew).RunSynchronously();
-            }
-
-            using (var stream = System.IO.File.OpenRead(modelPath))
-            {
-                _model = _context.Model.Load(stream);
-            }
+            _modelPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "wine.zip");
         }
 
         [HttpPost]
-        public float Post([FromBody] WineData wineData)
+        public async Task<float> Post([FromBody] WineData wineData)
         {
+            if (!System.IO.File.Exists(_modelPath))
+            {
+                var blob = BlobConnection.GetBlobReference(_configuration["blobConnectionString"], "model", "wine.zip");
+
+                await blob.DownloadToFileAsync(_modelPath, System.IO.FileMode.CreateNew);
+            }
+
+            using (var stream = System.IO.File.OpenRead(_modelPath))
+            {
+                _model = _context.Model.Load(stream);
+            }
+
             var predictionEngine = _model.CreatePredictionEngine<WineData, WinePrediction>(_context);
 
             var prediction = predictionEngine.Predict(wineData);
 
             return prediction.PredictedQuality;
-        }
-
-        [HttpGet]
-        public void Get()
-        {
-            //_model.
         }
     }
 }

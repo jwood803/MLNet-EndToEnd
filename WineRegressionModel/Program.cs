@@ -21,7 +21,7 @@ namespace WineRegressionModel
                 .AddJsonFile("config.json");
 
             var configuration = builder.Build();
-            _sqlConnectionString = configuration["connectionString"];
+            _sqlConnectionString = configuration["sqlConnectionString"];
 
             var fileData = ReadFromFile("./winequality.csv");
 
@@ -64,7 +64,7 @@ namespace WineRegressionModel
             {
                 conn.Open();
 
-                var selectCommand = "SELECT * FROM mlnetExample.dbo.WineData";
+                var selectCommand = "SELECT * FROM mlnetdatabase.dbo.WineData";
 
                 var sqlCommand = new SqlCommand(selectCommand, conn);
 
@@ -100,11 +100,11 @@ namespace WineRegressionModel
             {
                 conn.Open();
 
-                var insertCommand = @"INSERT INTO winedata.dbo.WineData VALUES 
+                var insertCommand = @"INSERT INTO mlnetdatabase.dbo.WineData VALUES 
                     (@type, @fixedAcidity, @volatileAcidity, @citricAcid, @residualSugar, @chlorides,
                      @freeSulfureDioxide, @totalSulfurDioxide, @density, @ph, @sulphates, @alcohol, @quality);";
 
-                var selectCommand = "SELECT COUNT(*) From mlnetExample.dbo.WineData";
+                var selectCommand = "SELECT COUNT(*) From mlnetdatabase.dbo.WineData";
 
                 var selectSqlCommand = new SqlCommand(selectCommand, conn);
 
@@ -112,7 +112,7 @@ namespace WineRegressionModel
 
                 if (results > 0)
                 {
-                    var deleteCommand = "DELETE FROM mlnetExample.dbo.WineData";
+                    var deleteCommand = "DELETE FROM mlnetdatabase.dbo.WineData";
 
                     var deleteSqlCommand = new SqlCommand(deleteCommand, conn);
 

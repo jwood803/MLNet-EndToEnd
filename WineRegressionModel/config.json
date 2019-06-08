@@ -1,4 +1,4 @@
 {
-  "sqlConnectionString": "<SQL Connection String>",
-  "blobConnectionString": "<Blob Connection String>"
+  "sqlConnectionString": "Server=tcp:mlnetdb.database.windows.net,1433;Initial Catalog=mlnetdatabase;Persist Security Info=False;User ID=mlnetuser;Password=Password_1;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+  "blobConnectionString": "DefaultEndpointsProtocol=https;AccountName=databricksdemostorage;AccountKey=dZfyG1orvYTc39JP+P20N4KNZlxraci7fHf04Q3OACmty8mIsM+B/YNalUDdf26FuBTQ8Ycvisw5e+fWYES45w==;EndpointSuffix=core.windows.net"
 }
