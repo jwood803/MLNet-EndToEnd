@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <v-layout column>
+    <v-layout column v-if="!loaded">
       <v-form v-model="valid">
         <v-layout row>
         <v-flex xs4>
@@ -12,7 +12,7 @@
           </v-select>
 
           <v-text-field
-            v-model="fixedAcidity"
+            v-model.number="fixedAcidity"
             label="Fixed Acidity"
             required>
           </v-text-field>
@@ -21,7 +21,7 @@
 
         <v-flex xs4>
           <v-text-field
-            v-model="volatileAcidity"
+            v-model.number="volatileAcidity"
             label="Volatile Acidity"
             required>
           </v-text-field>
@@ -29,15 +29,15 @@
 
         <v-flex xs4>
           <v-text-field
-                  v-model="citricAcid"
-                  label="Citric Acid"
-                  required>
+            v-model.number="citricAcid"
+            label="Citric Acid"
+            required>
           </v-text-field>
         </v-flex>
 
         <v-flex xs4>
           <v-text-field
-            v-model="residualSugar"
+            v-model.number="residualSugar"
             label="Residual Sugar"
             required>
           </v-text-field>
@@ -45,7 +45,7 @@
 
         <v-flex xs4>
           <v-text-field
-            v-model="chlorides"
+            v-model.number="chlorides"
             label="Chlorides"
             required>
           </v-text-field>
@@ -53,7 +53,7 @@
 
         <v-flex xs4>
           <v-text-field
-            v-model="freeSulfurDioxide"
+            v-model.number="freeSulfurDioxide"
             label="Free Sulfur Dioxide"
             required>
           </v-text-field>
@@ -61,7 +61,7 @@
 
         <v-flex xs4>
           <v-text-field
-            v-model="totalSulfurDioxide"
+            v-model.number="totalSulfurDioxide"
             label="Total Sulfur Dioxide"
             required>
           </v-text-field>
@@ -69,7 +69,7 @@
 
         <v-flex xs4>
           <v-text-field
-            v-model="density"
+            v-model.number="density"
             label="Density"
             required>
           </v-text-field>
@@ -77,7 +77,7 @@
 
         <v-flex xs4>
           <v-text-field
-            v-model="ph"
+            v-model.number="ph"
             label="Ph"
             required>
           </v-text-field>
@@ -85,7 +85,7 @@
 
         <v-flex xs4>
           <v-text-field
-            v-model="sulphates"
+            v-model.number="sulphates"
             label="Sulphates"
             required>
           </v-text-field>
@@ -93,7 +93,7 @@
 
         <v-flex xs4>
           <v-text-field
-            v-model="alcohol"
+            v-model.number="alcohol"
             label="Alcohol"
             required>
           </v-text-field>
@@ -103,6 +103,14 @@
         Predict
       </v-btn>
     </v-layout>
+    <div v-if="loaded">
+      <div>
+        Prediction is {{prediction | number}}
+      </div>
+      <div>
+        <a @click="resetPrediction">Another prediction</a>
+      </div>
+    </div>
   </v-container>
 </template>
 
@@ -111,25 +119,29 @@ import axios from "axios";
 
 export default {
   name: "Predict",
-  data: () => ({
-    valid: true,
-    wineTypes: ["Red", "White"],
-    wineType: "",
-    fixedAcidity: 0,
-    volatileAcidity: 0,
-    citricAcid: 0,
-    residualSugar: 0,
-    chlorides: 0,
-    freeSulfurDioxide: 0,
-    totalSulfurDioxide: 0,
-    density: 0,
-    ph: 0,
-    sulphates: 0,
-    alcohol: 0,
-    prediction: null
-  }),
-  methods: () => ({
-    predict: () => {
+  data () {
+    return {
+      valid: true,
+      wineTypes: ["Red", "White"],
+      wineType: "",
+      fixedAcidity: 0,
+      volatileAcidity: 0,
+      citricAcid: 0,
+      residualSugar: 0,
+      chlorides: 0,
+      freeSulfurDioxide: 0,
+      totalSulfurDioxide: 0,
+      density: 0,
+      ph: 0,
+      sulphates: 0,
+      alcohol: 0,
+      prediction: null,
+      loaded: false,
+      error: null
+    }
+  },
+  methods: {
+    predict() {
       const prediction = {
         wineType: this.wineType,
         fixedAcidity: this.fixedAcidity,
@@ -145,9 +157,25 @@ export default {
         alcohol: this.alcohol
       };
 
-      axios.post("", prediction).then(resp => console.log(resp.data));
+      axios.post("http://localhost:59223/api/model", prediction)
+        // eslint-disable-next-line
+        .then(resp => {
+          this.prediction = resp.data;
+        })
+        .catch(err => this.error = err)
+        .finally(() => {
+          this.loaded = true;
+        });
+    },
+    resetPrediction() {
+      this.loaded = false;
     }
-  })
+  },
+  filters: {
+    number(value) {
+      return value.toPrecision(2);
+    }
+  }
 };
 </script>
 
