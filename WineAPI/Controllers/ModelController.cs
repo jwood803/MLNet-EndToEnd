@@ -1,9 +1,5 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.ML;
-using Microsoft.ML;
 using WineCommon;
 
 namespace WineAPI.Controllers

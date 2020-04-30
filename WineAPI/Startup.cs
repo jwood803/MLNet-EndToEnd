@@ -28,6 +28,11 @@ namespace WineAPI
 
             Configuration = builder.Build();
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllOrigins", buildOptions => { buildOptions.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(); });
+            });
+
             services.AddSingleton(Configuration);
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -39,10 +44,21 @@ namespace WineAPI
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.Use(async (ctx, next) =>
+            {
+                await next();
+                if (ctx.Response.StatusCode == 204)
+                {
+                    ctx.Response.ContentLength = 0;
+                }
+            });
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseCors("AllowAllOrigins");
 
             app.UseMvc();
         }

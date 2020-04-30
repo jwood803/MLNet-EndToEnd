@@ -33,25 +33,25 @@ namespace WineRegressionModel
 
             //var mlData = context.Data.LoadFromEnumerable(dbData);
 
-            //var trainTestData = context.Regression.TrainTestSplit(mlData, testFraction: 0.2);
+            var trainTestData = context.Data.TrainTestSplit(mlData, testFraction: 0.2);
 
             //var dataPreview = trainTestData.TrainSet.Preview();
             
-            //var pipeline = context.Transforms.Categorical.OneHotEncoding("TypeOneHot", "Type")
-            //    .Append(context.Transforms.Concatenate("Features", "FixedAcidity", "VolatileAcidity", "CitricAcid",
-            //        "ResidualSugar", "Chlorides", "FreeSulfurDioxide", "TotalSulfurDioxide", "Density", "Ph", "Sulphates",
-            //        "Alcohol"))
-            //    .Append(context.Transforms.CopyColumns(("Label", "Quality")))
-            //    .Append(context.Regression.Trainers.FastTree());
+            var pipeline = context.Transforms.Categorical.OneHotEncoding("TypeOneHot", "Type")
+                .Append(context.Transforms.Concatenate("Features", "FixedAcidity", "VolatileAcidity", "CitricAcid",
+                    "ResidualSugar", "Chlorides", "FreeSulfurDioxide", "TotalSulfurDioxide", "Density", "Ph", "Sulphates",
+                    "Alcohol"))
+                .Append(context.Transforms.CopyColumns("Label", "Quality"))
+                .Append(context.Regression.Trainers.LbfgsPoissonRegression());
 
             //var model = pipeline.Fit(trainTestData.TrainSet);
 
             //var blob = BlobConnection.GetBlobReference(configuration["blobConnectionString"], "models", fileName);
 
-            //using (var stream = File.Create(fileName))
-            //{
-            //    context.Model.Save(model, stream);
-            //}
+            using (var stream = File.Create(fileName))
+            {
+                context.Model.Save(model, mlData.Schema ,stream);
+            }
 
             //await blob.UploadFromFileAsync(fileName);
         }
